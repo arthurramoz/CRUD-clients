@@ -1,13 +1,21 @@
 'use client';
 
-import { PropsWithChildren } from 'react';
+import { PropsWithChildren, useState } from 'react';
 import Navbar from '@/components/Navbar/Navbar';
 import { MasterLayoutContainer, MasterLayoutContent } from './styles';
 
 const MasterLayout = ({ children }: PropsWithChildren) => {
+  const [navbar, setNavbar] = useState<number>(1);
+  const [open, setOpen] = useState<boolean>(false);
+
   return (
     <MasterLayoutContainer>
-      <Navbar />
+      <Navbar
+        navbar={navbar}
+        setNavbar={setNavbar}
+        open={open}
+        setOpen={setOpen}
+      />
       <MasterLayoutContent>{children}</MasterLayoutContent>
     </MasterLayoutContainer>
   );
