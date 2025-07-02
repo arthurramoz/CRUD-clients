@@ -31,7 +31,7 @@ const Providers = ({ children }: PropsWithChildren) => {
         <QueryClientProvider client={queryClient}>
           <GlobalStyle />
           <NextNProgress
-            color={theme.colors.primary}
+            color={theme.colors[1]}
             options={{ easing: 'ease', speed: 500 }}
           />
           {children}

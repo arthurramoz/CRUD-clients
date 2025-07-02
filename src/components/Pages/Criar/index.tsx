@@ -6,6 +6,9 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import AddressModal from './Endereco/Create/create';
+import { useRouter } from 'next/navigation';
+import CardPreview from './Cartao/Preview/preview';
+import CreditCardModal from './Cartao/Create/create';
 
 export const SectionCreate = styled.div`
   display: flex;
@@ -17,7 +20,7 @@ export const SectionCreate = styled.div`
 `;
 
 export const SectionSide = styled.div`
-  width: 90%;
+  width: 100%;
 
   display: flex;
   justify-content: center;
@@ -94,6 +97,7 @@ const CreateUser = () => {
     resolver: yupResolver(UserSchema),
   });
 
+  const router = useRouter();
   const [billingAddress, setBillingAddress] = useState<any>(null);
   const [shippingAddress, setShippingAddress] = useState<any>(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
@@ -101,6 +105,9 @@ const CreateUser = () => {
     'COBRANCA' | 'ENTREGA'
   >('COBRANCA');
   const [editingAddress, setEditingAddress] = useState<any>(null);
+  const [creditCard, setCreditCard] = useState<any>(null);
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+  const [editingCard, setEditingCard] = useState<any>(null);
 
   const handleAddressSubmit = (data: any) => {
     if (currentAddressType === 'COBRANCA') {
@@ -117,15 +124,50 @@ const CreateUser = () => {
     setIsAddressModalOpen(true);
   };
 
-  const onSubmit = (data: any) => {
+  const handleCardSubmit = (data: any) => {
+    setCreditCard(data);
+    setIsCardModalOpen(false);
+  };
+
+  const onSubmit = async (data: any) => {
     const userData = {
-      ...data,
+      codigo: `CUST${Date.now()}`,
+      name: data.name,
+      birth_date: data.birthDate,
+      cpf: data.cpf,
+      gender: data.gender,
+      email: data.email,
+      password: data.password,
+      status: true,
+      ranking: 0,
+      phone: {
+        ddd: data.phone.ddd,
+        number: data.phone.number,
+        phoneType: data.phone.type,
+      },
       addresses: [
         { ...billingAddress, addressType: 'COBRANCA' },
         { ...shippingAddress, addressType: 'ENTREGA' },
       ].filter(Boolean),
+      cards: creditCard ? [{ ...creditCard }] : [],
     };
-    console.log(userData);
+
+    try {
+      const response = await fetch('http://localhost:5050/api/customers', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(userData),
+      });
+
+      const result = await response.json();
+
+      router.push('/users');
+    } catch (err) {
+      console.error('Erro ao criar usuário:', err);
+      alert('Erro ao cadastrar usuário');
+    }
   };
 
   return (
@@ -161,6 +203,7 @@ const CreateUser = () => {
                 type="text"
                 placeholder="Insira o CPF"
                 {...register('cpf')}
+                maxLength={11}
               />
               {errors.cpf && <Error>{errors.cpf.message}</Error>}
             </InputDiv>
@@ -188,13 +231,15 @@ const CreateUser = () => {
                   type="text"
                   {...register('phone.ddd')}
                   placeholder="DDD"
-                  style={{ width: '20%' }}
+                  style={{ width: '14%' }}
+                  maxLength={2}
                 />
                 <Input
                   type="text"
                   {...register('phone.number')}
                   placeholder="Número"
-                  style={{ width: '50%' }}
+                  style={{ width: '56%' }}
+                  maxLength={9}
                 />
               </PhoneInputContainer>
               {(errors.phone?.ddd || errors.phone?.number) && (
@@ -250,6 +295,16 @@ const CreateUser = () => {
               />
             </InputDiv>
 
+            <InputDiv>
+              <Label>Cartão de Crédito*</Label>
+              <CardPreview
+                card={creditCard}
+                onEdit={() => setIsCardModalOpen(true)}
+                onDelete={() => setCreditCard(null)}
+                onAdd={() => setIsCardModalOpen(true)}
+              />
+            </InputDiv>
+
             <SubmitButton
               type="submit"
               onClick={() => {
@@ -267,6 +322,13 @@ const CreateUser = () => {
         onClose={() => setIsAddressModalOpen(false)}
         onSubmit={handleAddressSubmit}
         initialData={editingAddress}
+      />
+
+      <CreditCardModal
+        isOpen={isCardModalOpen}
+        onClose={() => setIsCardModalOpen(false)}
+        onSubmit={handleCardSubmit}
+        initialData={editingCard}
       />
     </Center>
   );

@@ -1,4 +1,4 @@
-import { usuarios } from '@/mock/users';
+import { Customer, usuarios } from '@/mock/users';
 import {
   Center,
   SectionTable,
@@ -17,9 +17,18 @@ import { MdEdit } from 'react-icons/md';
 import DeleteIcon from '@mui/icons-material/Delete';
 import Toogle from '@/components/Toggle/Navbar';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState } from 'react';
+import { CustomerResponse } from '@/validations/Customer';
 
 const Users = () => {
   const router = useRouter();
+  const [data, setData] = useState<CustomerResponse[]>();
+
+  useEffect(() => {
+    fetch('http://localhost:5050/api/customers')
+      .then(res => res.json())
+      .then(data => setData(data));
+  }, []);
 
   return (
     <Center>
@@ -39,7 +48,7 @@ const Users = () => {
             </TableHeaderRow>
           </TableHead>
           <TableBody>
-            {usuarios.map(usuario => (
+            {data?.map(usuario => (
               <TableRow key={usuario.id}>
                 <TableData>{usuario.name}</TableData>
                 <TableData>{usuario.email}</TableData>

@@ -16,13 +16,19 @@ import {
   Select,
   SubmitButton,
 } from '../Criar';
-import { useParams } from 'next/navigation';
+import { useParams, useRouter } from 'next/navigation';
 import { Customer, usuarios } from '@/mock/users';
 import { formatDateToPtBr } from '@/hooks/format';
+import CardPreview from '../Criar/Cartao/Preview/preview';
+import CreditCardModal from '../Criar/Cartao/Create/create';
 
 const EditUser = () => {
   const { id } = useParams();
   const [data, setData] = useState<Customer>();
+
+  const [isCardModalOpen, setIsCardModalOpen] = useState(false);
+  const [editingCard, setEditingCard] = useState<any>(null);
+  const [creditCard, setCreditCard] = useState<any>(null);
 
   const {
     register,
@@ -35,38 +41,52 @@ const EditUser = () => {
 
   useEffect(() => {
     if (id) {
-      const user = usuarios.find(p => p.id === Number(id));
+      fetch(`http://localhost:5050/api/customers/${id}`)
+        .then(res => res.json())
+        .then(user => {
+          setData(user);
 
-      if (user) {
-        setData(user);
+          setValue('name', user.name);
+          setValue('birthDate', user.birth_date.split('T')[0]);
+          setValue('cpf', user.cpf);
+          setValue('gender', user.gender);
+          setValue('email', user.email);
+          setValue('password', user.password);
+          setValue('confirmPassword', user.password);
+          setValue('phone.type', user.phone.phoneType);
+          setValue('phone.ddd', user.phone.ddd);
+          setValue('phone.number', user.phone.number);
 
-        setValue('name', user.name);
-        setValue('birthDate', user.birthDate);
-        setValue('cpf', user.cpf);
-        setValue('gender', user.gender);
-        setValue('email', user.email);
-        setValue('password', user.password);
-        setValue('confirmPassword', user.password);
-        setValue('phone.type', user.phone.phoneType);
-        setValue('phone.ddd', user.phone.ddd);
-        setValue('phone.number', user.phone.number);
+          const billing = user.addresses.find(
+            (a: any) => a.addressType === 'COBRANCA',
+          );
+          const shipping = user.addresses.find(
+            (a: any) => a.addressType === 'ENTREGA',
+          );
 
-        const billing = user.addresses.find(a => a.addressType === 'COBRANCA');
-        const shipping = user.addresses.find(a => a.addressType === 'ENTREGA');
+          setBillingAddress(billing || null);
+          setShippingAddress(shipping || null);
 
-        setBillingAddress(billing || null);
-        setShippingAddress(shipping || null);
-      }
+          const card = user.cards?.[0];
+          if (card) setCreditCard(card);
+        });
     }
   }, [id, setValue]);
 
+  const router = useRouter();
   const [billingAddress, setBillingAddress] = useState<any>(null);
   const [shippingAddress, setShippingAddress] = useState<any>(null);
   const [isAddressModalOpen, setIsAddressModalOpen] = useState(false);
   const [currentAddressType, setCurrentAddressType] = useState<
     'COBRANCA' | 'ENTREGA'
   >('COBRANCA');
+
   const [editingAddress, setEditingAddress] = useState<any>(null);
+
+  const handleCardSubmit = (data: any) => {
+    setCreditCard(data);
+    setIsCardModalOpen(false);
+  };
 
   const handleAddressSubmit = (data: any) => {
     if (currentAddressType === 'COBRANCA') {
@@ -85,13 +105,42 @@ const EditUser = () => {
 
   const onSubmit = (data: any) => {
     const userData = {
-      ...data,
+      codigo: data.codigo || `CUST${id}`,
+      name: data.name,
+      birth_date: data.birthDate,
+      cpf: data.cpf,
+      gender: data.gender,
+      email: data.email,
+      password: data.password,
+      status: true,
+      ranking: 0,
+      phone: {
+        phoneType: data.phone.type,
+        ddd: data.phone.ddd,
+        number: data.phone.number,
+      },
       addresses: [
         { ...billingAddress, addressType: 'COBRANCA' },
         { ...shippingAddress, addressType: 'ENTREGA' },
       ].filter(Boolean),
+      cards: creditCard ? [{ ...creditCard, customerId: Number(id) }] : [],
     };
-    console.log(userData);
+
+    fetch(`http://localhost:5050/api/customers/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(userData),
+    })
+      .then(res => res.json())
+      .then(data => {
+        console.log('Atualizado com sucesso', data);
+        alert('Usuário atualizado com sucesso');
+        router.replace('/users');
+      })
+      .catch(err => {
+        console.error('Erro ao atualizar:', err);
+        alert('Erro ao atualizar');
+      });
   };
 
   return (
@@ -178,28 +227,6 @@ const EditUser = () => {
             </InputDiv>
 
             <InputDiv>
-              <Label>Senha*</Label>
-              <Input
-                type="password"
-                placeholder="Insira a senha"
-                {...register('password')}
-              />
-              {errors.password && <Error>{errors.password.message}</Error>}
-            </InputDiv>
-
-            <InputDiv>
-              <Label>Confirmar senha*</Label>
-              <Input
-                type="password"
-                placeholder="Confirme a senha"
-                {...register('confirmPassword')}
-              />
-              {errors.confirmPassword && (
-                <Error>{errors.confirmPassword.message}</Error>
-              )}
-            </InputDiv>
-
-            <InputDiv>
               <Label>Endereços*</Label>
               <AddressPreview
                 address={billingAddress}
@@ -217,13 +244,23 @@ const EditUser = () => {
               />
             </InputDiv>
 
+            <InputDiv>
+              <Label>Cartão de Crédito*</Label>
+              <CardPreview
+                card={creditCard}
+                onEdit={() => setIsCardModalOpen(true)}
+                onDelete={() => setCreditCard(null)}
+                onAdd={() => setIsCardModalOpen(true)}
+              />
+            </InputDiv>
+
             <SubmitButton
               type="submit"
               onClick={() => {
                 handleSubmit(onSubmit)();
               }}
             >
-              Cadastrar Usuário
+              Editar Usuário
             </SubmitButton>
           </SectionSide>
         </SectionCreate>
@@ -234,6 +271,13 @@ const EditUser = () => {
         onClose={() => setIsAddressModalOpen(false)}
         onSubmit={handleAddressSubmit}
         initialData={editingAddress}
+      />
+
+      <CreditCardModal
+        isOpen={isCardModalOpen}
+        onClose={() => setIsCardModalOpen(false)}
+        onSubmit={handleCardSubmit}
+        initialData={creditCard}
       />
     </Center>
   );

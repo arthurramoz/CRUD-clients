@@ -12,12 +12,12 @@ export const ButtonComponent = styled.button<ButtonProps>`
     outlined ? 'none' : '0px 4px 4px 0px #00000040'};
   border-radius: 4px;
   border: ${({ theme, outlined }) =>
-    outlined ? `1px solid ${theme.colors.primary}` : 'none'};
+    outlined ? `1px solid ${theme.colors[1]}` : 'none'};
   background-color: ${({ theme, outlined }) =>
-    outlined ? theme.colors.white : theme.colors.primary};
+    outlined ? theme.colors.white : theme.colors[1]};
 
   color: ${({ theme, outlined }) =>
-    outlined ? theme.colors.primary : theme.colors.white};
+    outlined ? theme.colors[1] : theme.colors.white};
   font-size: 14px;
   font-weight: 500;
   line-height: 17.38px;

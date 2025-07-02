@@ -6,11 +6,12 @@ export const UserSchema = yup.object({
   name: yup.string().required('Nome é obrigatório'),
   birthDate: yup
     .string()
-    .transform((value, originalValue) =>
-      originalValue === '' ? null : new Date(originalValue),
-    )
+    .required('Data de nascimento é obrigatória')
     .nullable()
-    .required('Data de nascimento é obrigatória'),
+    .test('valid-date', 'Data inválida', value => {
+      if (!value) return false;
+      return !isNaN(Date.parse(value));
+    }),
   cpf: yup.string().required('CPF é obrigatório').length(11, 'CPF inválido'),
   gender: yup.string().required('Gênero é obrigatório'),
   email: yup.string().email('E-mail inválido').required('E-mail é obrigatório'),
