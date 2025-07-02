@@ -14,6 +14,7 @@ import {
   Title,
 } from './style';
 import { MdEdit } from 'react-icons/md';
+import DeleteIcon from '@mui/icons-material/Delete';
 import Toogle from '@/components/Toggle/Navbar';
 import { useRouter } from 'next/navigation';
 
@@ -28,10 +29,13 @@ const Users = () => {
         <TableWrapper>
           <TableHead>
             <TableHeaderRow>
-              <TableHeader>Nome</TableHeader>
-              <TableHeader>Email</TableHeader>
-              <TableHeaderIcon>Inativar</TableHeaderIcon>
-              <TableHeaderIcon>Editar</TableHeaderIcon>
+              <TableHeader style={{ width: '15%' }}>Nome</TableHeader>
+              <TableHeader style={{ width: '30%' }}>E-mail</TableHeader>
+              <TableHeaderIcon style={{ width: '3%' }}>
+                Inativar
+              </TableHeaderIcon>
+              <TableHeaderIcon style={{ width: '3%' }}>Editar</TableHeaderIcon>
+              <TableHeaderIcon style={{ width: '3%' }}>Deletar</TableHeaderIcon>
             </TableHeaderRow>
           </TableHead>
           <TableBody>
@@ -44,11 +48,12 @@ const Users = () => {
                 </TableDataIcon>
                 <TableDataIcon>
                   <MdEdit
-                    width="20"
-                    height="20"
                     color="#555"
                     onClick={() => router.push(`/users/${usuario.id}`)}
                   />
+                </TableDataIcon>
+                <TableDataIcon>
+                  <DeleteIcon />
                 </TableDataIcon>
               </TableRow>
             ))}

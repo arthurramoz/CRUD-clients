@@ -62,6 +62,8 @@ export const TableDataIcon = styled.td`
   border-top: 1px solid ${({ theme }) => theme.colors[3]};
 
   svg {
+    color: #555;
     cursor: pointer;
+    font-size: 1.4rem;
   }
 `;

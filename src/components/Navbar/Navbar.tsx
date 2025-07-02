@@ -23,6 +23,7 @@ import { usePathname } from 'next/navigation';
 import CloseRoundedIcon from '@mui/icons-material/CloseRounded';
 import PersonOutlineOutlinedIcon from '@mui/icons-material/PersonOutlineOutlined';
 import AddIcon from '@mui/icons-material/Add';
+import EditIcon from '@mui/icons-material/Edit';
 
 interface Props {
   open: boolean;
@@ -183,6 +184,25 @@ const NavbarDefault = ({ navbar, setNavbar, open, setOpen }: Props) => {
                     selected2={expanded}
                   >
                     Criar usuário
+                  </NavLinkText>
+                </NavLink>
+                <NavLink
+                  selected={expanded}
+                  selected2={pathname.startsWith('/users/')}
+                  className="edit"
+                  href="#"
+                >
+                  <NavLinkIcon
+                    selected2={expanded}
+                    selected={pathname.startsWith('/users/')}
+                  >
+                    <EditIcon />
+                  </NavLinkIcon>
+                  <NavLinkText
+                    selected={pathname.startsWith('/users/')}
+                    selected2={expanded}
+                  >
+                    Editar usuário
                   </NavLinkText>
                 </NavLink>
               </Nav>

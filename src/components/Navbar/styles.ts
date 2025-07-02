@@ -196,6 +196,13 @@ export const NavLink = styled(Link)<NavLinkProps>`
   text-decoration: none;
 
   transition: all 0.2s;
+
+  &.edit {
+    cursor: not-allowed;
+    &:hover {
+      background: #00000000;
+    }
+  }
 `;
 
 interface NavLinkProps {

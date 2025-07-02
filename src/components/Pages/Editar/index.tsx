@@ -98,7 +98,6 @@ const EditUser = () => {
     <Center>
       <SectionTable>
         <Title>Editar usuário</Title>
-
         <SectionCreate>
           <SectionSide>
             <InputDiv>
