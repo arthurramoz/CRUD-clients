@@ -188,18 +188,18 @@ const NavbarDefault = ({ navbar, setNavbar, open, setOpen }: Props) => {
                 </NavLink>
                 <NavLink
                   selected={expanded}
-                  selected2={pathname.startsWith('/users/')}
+                  selected2={pathname.startsWith('/users/edit/')}
                   className="edit"
                   href="#"
                 >
                   <NavLinkIcon
                     selected2={expanded}
-                    selected={pathname.startsWith('/users/')}
+                    selected={pathname.startsWith('/users/edit/')}
                   >
                     <EditIcon />
                   </NavLinkIcon>
                   <NavLinkText
-                    selected={pathname.startsWith('/users/')}
+                    selected={pathname.startsWith('/users/edit/')}
                     selected2={expanded}
                   >
                     Editar usuário

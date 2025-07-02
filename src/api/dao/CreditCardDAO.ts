@@ -43,4 +43,8 @@ export class CreditCardDAO {
       customerId,
     ]);
   }
+
+  async deleteById(id: number): Promise<void> {
+    await pool.query(`DELETE FROM credit_cards WHERE id = $1`, [id]);
+  }
 }

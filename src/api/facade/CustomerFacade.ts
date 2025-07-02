@@ -7,6 +7,7 @@ import { CreditCard } from '../models/CreditCard';
 import { PhoneDAO } from '../dao/PhoneDAO';
 import { AddressDAO } from '../dao/AddressDAO';
 import { CreditCardDAO } from '../dao/CreditCardDAO';
+import { pool } from '../config/db';
 
 export class CustomerFacade {
   private customerDAO = new CustomerDAO();
@@ -57,6 +58,17 @@ export class CustomerFacade {
     for (const cas of cards) {
       await this.creditCardDAO.create(cas);
     }
+  }
+
+  async toggleStatus(id: number, status: boolean): Promise<void> {
+    await this.customerDAO.updateStatus(id, status);
+  }
+
+  async updatePassword(id: number, hashedPassword: string): Promise<void> {
+    await pool.query(`UPDATE customers SET password = $1 WHERE id = $2`, [
+      hashedPassword,
+      id,
+    ]);
   }
 
   async saveFull(

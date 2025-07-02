@@ -4,20 +4,24 @@ import { Phone } from '../models/Phone';
 import { Address } from '../models/Addresses';
 import { CustomerFacade } from '../facade/CustomerFacade';
 import { CreditCard } from '../models/CreditCard';
+import bcrypt from 'bcryptjs';
 
 const facade = new CustomerFacade();
 
 export class CustomerController {
   async getAll(req: Request, res: Response) {
     const customers = await facade.getAll();
-    res.json(customers);
+    const sanitized = customers.map(c => ({ ...c, password: undefined }));
+    res.json(sanitized);
   }
 
   async getById(req: Request, res: Response) {
     const id = parseInt(req.params.id);
     const data = await facade.getById(id);
     if (!data) return res.status(404).json({ error: 'Cliente não encontrado' });
-    res.json(data);
+
+    const sanitized = { ...data, password: undefined };
+    res.json(sanitized);
   }
 
   async delete(req: Request, res: Response) {
@@ -26,9 +30,61 @@ export class CustomerController {
     res.status(200).json({ message: 'Cliente deletado com sucesso' });
   }
 
+  async toggleStatus(req: Request, res: Response) {
+    const id = parseInt(req.params.id);
+    const { status } = req.body;
+    await facade.toggleStatus(id, status);
+    res.status(200).json({ message: 'Status atualizado com sucesso' });
+  }
+
+  async search(req: Request, res: Response) {
+    const q = String(req.query.q ?? '')
+      .trim()
+      .toLowerCase();
+
+    console.log('SEARCH Q:', q);
+
+    const all = await facade.getAll();
+
+    const filtered = all.filter(c => {
+      return (
+        c.name.toLowerCase().includes(q) ||
+        c.email.toLowerCase().includes(q) ||
+        c.cpf.includes(q) ||
+        c.codigo?.toLowerCase().includes(q)
+      );
+    });
+
+    res.json(filtered.map(c => ({ ...c, password: undefined })));
+  }
+
+  async updatePassword(req: Request, res: Response) {
+    const id = parseInt(req.params.id);
+    const { currentPassword, newPassword, confirmPassword } = req.body;
+
+    if (newPassword !== confirmPassword) {
+      return res.status(400).json({ error: 'As senhas não coincidem' });
+    }
+
+    const existing = await facade.getById(id);
+    if (!existing)
+      return res.status(404).json({ error: 'Usuário não encontrado' });
+
+    const match = await bcrypt.compare(currentPassword, existing.password);
+    if (!match) {
+      return res.status(401).json({ error: 'Senha atual incorreta' });
+    }
+
+    const hashed = await bcrypt.hash(newPassword, 10);
+    await facade.updatePassword(id, hashed);
+
+    res.status(200).json({ message: 'Senha atualizada com sucesso' });
+  }
+
   async update(req: Request, res: Response) {
     const id = parseInt(req.params.id);
     const data = req.body;
+    const hashedPassword = await bcrypt.hash(data.password, 10);
 
     const customer = new Customer(
       id,
@@ -38,7 +94,7 @@ export class CustomerController {
       data.cpf,
       data.gender,
       data.email,
-      data.password,
+      hashedPassword,
       data.status ?? true,
       data.ranking ?? 0,
       new Date(),
@@ -92,6 +148,8 @@ export class CustomerController {
 
   async create(req: Request, res: Response) {
     const data = req.body;
+    const hashedPassword = await bcrypt.hash(data.password, 10);
+
     const customer = new Customer(
       0,
       data.codigo,
@@ -100,7 +158,7 @@ export class CustomerController {
       data.cpf,
       data.gender,
       data.email,
-      data.password,
+      hashedPassword,
       data.status ?? true,
       data.ranking ?? 0,
       new Date(),

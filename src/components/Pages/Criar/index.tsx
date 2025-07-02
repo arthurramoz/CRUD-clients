@@ -108,6 +108,8 @@ const CreateUser = () => {
   const [creditCard, setCreditCard] = useState<any>(null);
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
   const [editingCard, setEditingCard] = useState<any>(null);
+  const [errorAddress, setErrorAddress] = useState<string>('');
+  const [errorCard, setErrorCard] = useState<string>('');
 
   const handleAddressSubmit = (data: any) => {
     if (currentAddressType === 'COBRANCA') {
@@ -130,6 +132,22 @@ const CreateUser = () => {
   };
 
   const onSubmit = async (data: any) => {
+    let hasError = false;
+
+    if (!shippingAddress || !billingAddress) {
+      hasError = true;
+      setErrorAddress('Ambos endereços são obrigatórios');
+    }
+
+    if (!creditCard) {
+      hasError = true;
+      setErrorCard('Cartão de crédito é obrigatório');
+    }
+
+    if (hasError) {
+      return;
+    }
+
     const userData = {
       codigo: `CUST${Date.now()}`,
       name: data.name,
@@ -295,6 +313,8 @@ const CreateUser = () => {
               />
             </InputDiv>
 
+            {errorAddress && <Error>{errorAddress}</Error>}
+
             <InputDiv>
               <Label>Cartão de Crédito*</Label>
               <CardPreview
@@ -304,6 +324,8 @@ const CreateUser = () => {
                 onAdd={() => setIsCardModalOpen(true)}
               />
             </InputDiv>
+
+            {errorCard && <Error>{errorCard}</Error>}
 
             <SubmitButton
               type="submit"

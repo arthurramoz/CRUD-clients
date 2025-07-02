@@ -80,4 +80,11 @@ export class CustomerDAO {
   async delete(id: number): Promise<void> {
     await pool.query('DELETE FROM customers WHERE id = $1', [id]);
   }
+
+  async updateStatus(id: number, status: boolean): Promise<void> {
+    await pool.query(`UPDATE customers SET status = $1 WHERE id = $2`, [
+      status,
+      id,
+    ]);
+  }
 }

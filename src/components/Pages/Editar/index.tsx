@@ -17,27 +17,31 @@ import {
   SubmitButton,
 } from '../Criar';
 import { useParams, useRouter } from 'next/navigation';
-import { Customer, usuarios } from '@/mock/users';
-import { formatDateToPtBr } from '@/hooks/format';
+import { Customer } from '@/mock/users';
 import CardPreview from '../Criar/Cartao/Preview/preview';
 import CreditCardModal from '../Criar/Cartao/Create/create';
+import { IEditUserForm, EditUserSchema } from '@/validations/EditUserSchema';
 
 const EditUser = () => {
   const { id } = useParams();
   const [data, setData] = useState<Customer>();
 
   const [isCardModalOpen, setIsCardModalOpen] = useState(false);
-  const [editingCard, setEditingCard] = useState<any>(null);
   const [creditCard, setCreditCard] = useState<any>(null);
+  const [deletedAddressIds, setDeletedAddressIds] = useState<number[]>([]);
+  const [deletedCardIds, setDeletedCardIds] = useState<number>();
 
   const {
     register,
     handleSubmit,
     setValue,
+    watch,
     formState: { errors },
-  } = useForm<IUserForm>({
-    resolver: yupResolver(UserSchema),
+  } = useForm({
+    resolver: yupResolver(EditUserSchema),
   });
+
+  const currentPassword = watch('currentPassword');
 
   useEffect(() => {
     if (id) {
@@ -51,7 +55,6 @@ const EditUser = () => {
           setValue('cpf', user.cpf);
           setValue('gender', user.gender);
           setValue('email', user.email);
-          setValue('password', user.password);
           setValue('confirmPassword', user.password);
           setValue('phone.type', user.phone.phoneType);
           setValue('phone.ddd', user.phone.ddd);
@@ -103,7 +106,7 @@ const EditUser = () => {
     setIsAddressModalOpen(true);
   };
 
-  const onSubmit = (data: any) => {
+  const onSubmit = async (data: any) => {
     const userData = {
       codigo: data.codigo || `CUST${id}`,
       name: data.name,
@@ -111,7 +114,7 @@ const EditUser = () => {
       cpf: data.cpf,
       gender: data.gender,
       email: data.email,
-      password: data.password,
+      password: data.newPassword,
       status: true,
       ranking: 0,
       phone: {
@@ -126,21 +129,71 @@ const EditUser = () => {
       cards: creditCard ? [{ ...creditCard, customerId: Number(id) }] : [],
     };
 
-    fetch(`http://localhost:5050/api/customers/${id}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(userData),
-    })
-      .then(res => res.json())
-      .then(data => {
-        console.log('Atualizado com sucesso', data);
-        alert('Usuário atualizado com sucesso');
-        router.replace('/users');
-      })
-      .catch(err => {
-        console.error('Erro ao atualizar:', err);
-        alert('Erro ao atualizar');
-      });
+    try {
+      for (const addrId of deletedAddressIds) {
+        await fetch(`http://localhost:5050/api/addresses/${addrId}`, {
+          method: 'DELETE',
+        });
+      }
+
+      if (deletedCardIds) {
+        await fetch(`http://localhost:5050/api/cards/${deletedCardIds}`, {
+          method: 'DELETE',
+        });
+      }
+
+      if (
+        watch('currentPassword') &&
+        watch('newPassword') &&
+        watch('confirmPassword')
+      ) {
+        fetch(`http://localhost:5050/api/customers/${id}/password`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            currentPassword: data.currentPassword,
+            newPassword: data.newPassword,
+            confirmPassword: data.confirmPassword,
+          }),
+        })
+          .then(async res => {
+            const payload = await res.json();
+
+            if (!res.ok) {
+              if (res.status === 401) {
+                alert('Senha atual incorreta');
+              } else if (res.status === 400) {
+                alert(payload.error || 'Erro na requisição');
+              } else {
+                alert('Erro inesperado');
+              }
+              return;
+            }
+
+            alert('Senha atualizada com sucesso');
+          })
+          .catch(err => {
+            console.error(err);
+            alert('Erro de conexão. Tente novamente.');
+          });
+      }
+
+      const response = await fetch(
+        `http://localhost:5050/api/customers/${id}`,
+        {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData),
+        },
+      );
+
+      const result = await response.json();
+      alert('Usuário atualizado com sucesso');
+      router.replace('/users');
+    } catch (err) {
+      console.error('Erro ao atualizar:', err);
+      alert('Erro ao atualizar');
+    }
   };
 
   return (
@@ -175,6 +228,7 @@ const EditUser = () => {
                 type="text"
                 placeholder="Insira o CPF"
                 {...register('cpf')}
+                maxLength={11}
               />
               {errors.cpf && <Error>{errors.cpf.message}</Error>}
             </InputDiv>
@@ -227,18 +281,50 @@ const EditUser = () => {
             </InputDiv>
 
             <InputDiv>
+              <Label>Senha atual</Label>
+              <Input type="password" {...register('currentPassword')} />
+              {errors.currentPassword && (
+                <Error>{errors.currentPassword.message}</Error>
+              )}
+            </InputDiv>
+
+            <InputDiv>
+              <Label>Nova senha</Label>
+              <Input type="password" {...register('newPassword')} />
+              {errors.newPassword && (
+                <Error>{errors.newPassword.message}</Error>
+              )}
+            </InputDiv>
+
+            <InputDiv>
+              <Label>Confirmar senha</Label>
+              <Input type="password" {...register('confirmPassword')} />
+              {errors.confirmPassword && (
+                <Error>{errors.confirmPassword.message}</Error>
+              )}
+            </InputDiv>
+
+            <InputDiv>
               <Label>Endereços*</Label>
               <AddressPreview
                 address={billingAddress}
                 onEdit={() => openAddressModal('COBRANCA', billingAddress)}
-                onDelete={() => setBillingAddress(null)}
+                onDelete={() => {
+                  if (billingAddress?.id)
+                    setDeletedAddressIds(prev => [...prev, billingAddress.id]);
+                  setBillingAddress(null);
+                }}
                 onAdd={() => openAddressModal('COBRANCA')}
                 type="cobrança"
               />
               <AddressPreview
                 address={shippingAddress}
                 onEdit={() => openAddressModal('ENTREGA', shippingAddress)}
-                onDelete={() => setShippingAddress(null)}
+                onDelete={() => {
+                  if (shippingAddress?.id)
+                    setDeletedAddressIds(prev => [...prev, shippingAddress.id]);
+                  setShippingAddress(null);
+                }}
                 onAdd={() => openAddressModal('ENTREGA')}
                 type="entrega"
               />
@@ -249,7 +335,10 @@ const EditUser = () => {
               <CardPreview
                 card={creditCard}
                 onEdit={() => setIsCardModalOpen(true)}
-                onDelete={() => setCreditCard(null)}
+                onDelete={() => {
+                  if (creditCard?.id) setDeletedCardIds(creditCard.id);
+                  setCreditCard(null);
+                }}
                 onAdd={() => setIsCardModalOpen(true)}
               />
             </InputDiv>

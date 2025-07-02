@@ -1,7 +1,7 @@
 'use client';
 
 import EditUser from '@/components/Pages/Editar';
-import { Main } from '../../styles';
+import { Main } from '../../../styles';
 
 const EditUsersPage = () => {
   return (

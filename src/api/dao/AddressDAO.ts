@@ -55,4 +55,8 @@ export class AddressDAO {
       customerId,
     ]);
   }
+
+  async deleteById(id: number): Promise<void> {
+    await pool.query(`DELETE FROM addresses WHERE id = $1`, [id]);
+  }
 }

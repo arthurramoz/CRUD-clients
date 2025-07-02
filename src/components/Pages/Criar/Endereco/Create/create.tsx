@@ -203,7 +203,7 @@ const AddressModal = ({
 
               <InputDiv>
                 <Label>CEP</Label>
-                <Input type="text" {...register('cep')} />
+                <Input type="text" {...register('cep')} maxLength={8} />
                 {errors.cep && (
                   <ErrorMessage>{errors.cep.message}</ErrorMessage>
                 )}
