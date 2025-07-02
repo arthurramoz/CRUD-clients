@@ -5,7 +5,7 @@ export type IUserForm = yup.InferType<typeof UserSchema>;
 export const UserSchema = yup.object({
   name: yup.string().required('Nome é obrigatório'),
   birthDate: yup
-    .date()
+    .string()
     .transform((value, originalValue) =>
       originalValue === '' ? null : new Date(originalValue),
     )

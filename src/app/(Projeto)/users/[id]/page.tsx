@@ -1,12 +1,12 @@
 'use client';
 
+import EditUser from '@/components/Pages/Editar';
 import { Main } from '../../styles';
-import CreateUser from '@/components/Pages/Criar';
 
 const EditUsersPage = () => {
   return (
     <Main>
-      <CreateUser />
+      <EditUser />
     </Main>
   );
 };

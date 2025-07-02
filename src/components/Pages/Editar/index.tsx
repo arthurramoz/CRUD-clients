@@ -2,7 +2,7 @@ import { Center, SectionTable, Title } from '../Usuarios/style';
 import AddressPreview from '../Criar/Endereco/Preview/preview';
 import { IUserForm, UserSchema } from '@/validations/UserSchema';
 import { yupResolver } from '@hookform/resolvers/yup';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import AddressModal from '../Criar/Endereco/Create/create';
 import {
@@ -17,17 +17,48 @@ import {
   SubmitButton,
 } from '../Criar';
 import { useParams } from 'next/navigation';
+import { Customer, usuarios } from '@/mock/users';
+import { formatDateToPtBr } from '@/hooks/format';
 
 const EditUser = () => {
   const { id } = useParams();
+  const [data, setData] = useState<Customer>();
 
   const {
     register,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<IUserForm>({
     resolver: yupResolver(UserSchema),
   });
+
+  useEffect(() => {
+    if (id) {
+      const user = usuarios.find(p => p.id === Number(id));
+
+      if (user) {
+        setData(user);
+
+        setValue('name', user.name);
+        setValue('birthDate', user.birthDate);
+        setValue('cpf', user.cpf);
+        setValue('gender', user.gender);
+        setValue('email', user.email);
+        setValue('password', user.password);
+        setValue('confirmPassword', user.password);
+        setValue('phone.type', user.phone.phoneType);
+        setValue('phone.ddd', user.phone.ddd);
+        setValue('phone.number', user.phone.number);
+
+        const billing = user.addresses.find(a => a.addressType === 'COBRANCA');
+        const shipping = user.addresses.find(a => a.addressType === 'ENTREGA');
+
+        setBillingAddress(billing || null);
+        setShippingAddress(shipping || null);
+      }
+    }
+  }, [id, setValue]);
 
   const [billingAddress, setBillingAddress] = useState<any>(null);
   const [shippingAddress, setShippingAddress] = useState<any>(null);
@@ -123,13 +154,15 @@ const EditUser = () => {
                   type="text"
                   {...register('phone.ddd')}
                   placeholder="DDD"
-                  style={{ width: '20%' }}
+                  style={{ width: '14%' }}
+                  maxLength={2}
                 />
                 <Input
                   type="text"
                   {...register('phone.number')}
                   placeholder="Número"
-                  style={{ width: '50%' }}
+                  style={{ width: '56%' }}
+                  maxLength={9}
                 />
               </PhoneInputContainer>
               {(errors.phone?.ddd || errors.phone?.number) && (

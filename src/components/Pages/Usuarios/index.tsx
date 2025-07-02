@@ -15,8 +15,11 @@ import {
 } from './style';
 import { MdEdit } from 'react-icons/md';
 import Toogle from '@/components/Toggle/Navbar';
+import { useRouter } from 'next/navigation';
 
 const Users = () => {
+  const router = useRouter();
+
   return (
     <Center>
       <SectionTable>
@@ -40,7 +43,12 @@ const Users = () => {
                   <Toogle />
                 </TableDataIcon>
                 <TableDataIcon>
-                  <MdEdit width="20" height="20" color="#555" />
+                  <MdEdit
+                    width="20"
+                    height="20"
+                    color="#555"
+                    onClick={() => router.push(`/users/${usuario.id}`)}
+                  />
                 </TableDataIcon>
               </TableRow>
             ))}

@@ -1,6 +1,6 @@
 export type Gender = 'FEMININO' | 'MASCULINO' | 'OUTRO';
 export type PhoneType = 'CELULAR' | 'RESIDENCIAL' | 'COMERCIAL';
-export type AddressType = 'RESIDENCIAL' | 'COBRANCA' | 'ENTREGA';
+export type AddressType = 'COBRANCA' | 'ENTREGA';
 export type StreetType =
   | 'RUA'
   | 'AVENIDA'
@@ -55,7 +55,7 @@ export interface Customer {
   id: number;
   codigo: string;
   name: string;
-  birthDate: Date;
+  birthDate: string;
   cpf: string;
   gender: Gender;
   email: string;
@@ -73,7 +73,7 @@ export const usuarios: Customer[] = [
     id: 1,
     codigo: 'CLI-0001',
     name: 'Joana da Silva',
-    birthDate: new Date(1985, 5, 15),
+    birthDate: '2002-01-06',
     cpf: '12345678901',
     gender: 'FEMININO',
     email: 'joana.silva@email.com',
@@ -95,7 +95,7 @@ export const usuarios: Customer[] = [
         neighborhood: 'Jardim Primavera',
         cep: '01234567',
         complement: 'Apto 101',
-        addressType: 'RESIDENCIAL',
+        addressType: 'ENTREGA',
         streetType: 'RUA',
         residenceType: 'APARTAMENTO',
         city: 'São Paulo',
@@ -134,7 +134,7 @@ export const usuarios: Customer[] = [
     id: 2,
     codigo: 'CLI-0002',
     name: 'Carlos Oliveira',
-    birthDate: new Date(1990, 8, 22),
+    birthDate: '2004-01-08',
     cpf: '98765432109',
     gender: 'MASCULINO',
     email: 'carlos.oliveira@email.com',
@@ -155,7 +155,7 @@ export const usuarios: Customer[] = [
         number: 456,
         neighborhood: 'Barra da Tijuca',
         cep: '22640102',
-        addressType: 'RESIDENCIAL',
+        addressType: 'COBRANCA',
         streetType: 'RUA',
         residenceType: 'CASA',
         city: 'Rio de Janeiro',
